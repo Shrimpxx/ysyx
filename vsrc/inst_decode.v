@@ -3,7 +3,7 @@
 // Author        : shaoxuan
 // Email         : caisegou@foxmail.com
 // Created On    : 2023/09/10 19:27
-// Last Modified : 2023/09/17 19:23
+// Last Modified : 2023/11/05 11:10
 // File Name     : inst_decode.v
 // Description   :
 //         
@@ -41,7 +41,7 @@ module INST_DECODE
     wire              r_xor    = r_type & ((func3==3'b100) & ~(|func7));
     wire              r_srl    = r_type & ((func3==3'b101) & ~(|func7));
     wire              r_or     = r_type & ((func3==3'b110) & ~(|func7));
-    wire              r_and    = r_type & ((func3==3'b111) & ~(|func7));
+    wire              r_and    = r_type & ((&func3) & ~(|func7));
 
 
 //===================================================
@@ -55,7 +55,7 @@ module INST_DECODE
     wire              i_sltu   = i_type & (func3==3'b011);
     wire              i_xori   = i_type & (func3==3'b100);
     wire              i_ori    = i_type & (func3==3'b110);
-    wire              i_andi   = i_type & (func3==3'b111);
+    wire              i_andi   = i_type & (&func3);
     wire              i_slli   = i_type & (func3==3'b001);
     wire              i_srli   = i_type & (func3==3'b101);
     wire              i_srai   = i_type & (func3==3'b101);
@@ -66,17 +66,18 @@ module INST_DECODE
 //===================================================
 // S-type
 //===================================================
-    wire              ld_type = opcode==7'b000_0011; 
-    wire              st_type = opcode==7'b010_0011; 
-    wire    [11:0]    s_imm   = {inst_i[31:25] , inst_i[11:7]}; 
-    wire              ld_lb   = ld_type & (~(|func3));
-    wire              ld_lbu  = ld_type & (func3==3'b100);
-    wire              ld_lh   = ld_type & (func3==3'b001);
-    wire              ld_lhu  = ld_type & (func3==3'b101);
-    wire              ld_lw   = ld_type & (func3==3'b010);
-    wire              st_sb   = st_type & (~(|func3));
-    wire              st_sh   = st_type & (func3==3'b001);
-    wire              st_sw   = st_type & (func3==3'b010);
+    wire              ld_type = opcode==7'b000_0011            ;
+    wire              st_type = opcode==7'b010_0011            ;
+    wire    [11:0]    l_imm   = {inst_i[31:20]               } ;
+    wire    [11:0]    s_imm   = {inst_i[31:25] , inst_i[11:7]} ;
+    wire              ld_lb   = ld_type & (~(|func3))          ;
+    wire              ld_lbu  = ld_type & (func3==3'b100)      ;
+    wire              ld_lh   = ld_type & (func3==3'b001)      ;
+    wire              ld_lhu  = ld_type & (func3==3'b101)      ;
+    wire              ld_lw   = ld_type & (func3==3'b010)      ;
+    wire              st_sb   = st_type & (~(|func3))          ;
+    wire              st_sh   = st_type & (func3==3'b001)      ;
+    wire              st_sw   = st_type & (func3==3'b010)      ;
 
 
 
@@ -119,7 +120,23 @@ module INST_DECODE
 /*----------------  by shaoxuan 2023-09-17 11:42:12  ---------------------
                         extend imm
 ------------------  by shaoxuan 2023-09-17 11:42:12  -------------------*/
-    
+// lui and auipc do not need se(sign-extended)
+    wire    [31:0]    i_imm_se  = {{20{i_imm[11]}} , i_imm}; 
+    wire    [31:0]    l_imm_se  = {{20{l_imm[11]}} , l_imm}; 
+    wire    [31:0]    s_imm_se  = {{20{s_imm[11]}} , s_imm}; 
+    wire    [31:0]    b_imm_se  = {{19{b_imm[12]}} , b_imm , 1'b0}; 
+    wire    [31:0]    j_imm_se  = {{11{j_imm[20]}} , j_imm , 1'b0}; 
+
+    wire    [11:0]    imm_mux   = {32{i_type }} & i_imm_se |
+                                  {32{ld_type}} & l_imm_se |
+                                  {32{st_type}} & s_imm_se |
+                                  {32{b_type }} & b_imm_se |
+                                  {32{j_type }} & j_imm_se ;
+
+/*----------------  by shaoxuan 2023-11-05 11:09:41  ---------------------
+                        execute instruction    
+------------------  by shaoxuan 2023-11-05 11:09:41  -------------------*/
+
 
 
 

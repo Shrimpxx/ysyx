@@ -3,7 +3,7 @@
 // Author        : shaoxuan
 // Email         : caisegou@foxmail.com
 // Created On    : 2023/09/10 18:49
-// Last Modified : 2023/09/17 09:52
+// Last Modified : 2023/10/16 22:19
 // File Name     : inst_fetch.v
 // Description   :
 //         
@@ -29,7 +29,7 @@ module INST_FETCH
 // PC Mux
 //===================================================
 
-    wire    [31:0]    nxt_pc = pc_sel ? pc_o + jump_imm_i : pc_o + 32'h4;
+    wire    [31:0]    nxt_pc = pc_sel_i ? pc_o + jump_imm_i : pc_o + 32'h4;
 
     always @ ( posedge sclk_i or posedge srst_i ) begin
         if( srst_i )begin
