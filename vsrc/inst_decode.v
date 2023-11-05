@@ -3,7 +3,7 @@
 // Author        : shaoxuan
 // Email         : caisegou@foxmail.com
 // Created On    : 2023/09/10 19:27
-// Last Modified : 2023/11/05 11:37
+// Last Modified : 2023/11/05 22:14
 // File Name     : inst_decode.v
 // Description   :
 //         
@@ -127,7 +127,7 @@ module INST_DECODE
     wire    [31:0]    b_imm_se  = {{19{b_imm[12]}} , b_imm , 1'b0}; 
     wire    [31:0]    j_imm_se  = {{11{j_imm[20]}} , j_imm , 1'b0}; 
 
-    wire    [11:0]    imm_mux   = {32{i_type }} & i_imm_se |
+    wire    [11:0]    imm       = {32{i_type }} & i_imm_se |
                                   {32{ld_type}} & l_imm_se |
                                   {32{st_type}} & s_imm_se |
                                   {32{b_type }} & b_imm_se |
@@ -136,10 +136,22 @@ module INST_DECODE
 /*----------------  by shaoxuan 2023-11-05 11:09:41  ---------------------
                         execute instruction    
 ------------------  by shaoxuan 2023-11-05 11:09:41  -------------------*/
+    wire    [31:0]    alu_result = i_addi ? rs1 + imm :
+                                   i_slti ? rs1 < imm :
+                                   i_sltu ? 
 
 
 
-git clone https://github.com/Shrimpxx/ysyx.git
+function compare(type , rs1 , rs2); 
+    //rs1 < rs2 ==> compare set to 1
+    input           type; //1: unsigned-compare  0: signed-compare
+    input   [31:0]  rs1;
+    input   [31:0]  rs2;
+    wire    signed_compare   = rs1[31] > rs2[31]                         | ~(rs1[31] < rs2[31])                        | 
+                               rs1[31] & rs2[31] & (rs1[30:0]>rs2[30:0]) | ~(rs1[31] | rs2[31]) & (rs1[30:0]<rs2[30:0]);
+    wire    unsigned_compare = rs1 < rs2 ;
+    wire    compare = type ? unsigned_compare : signed_compare;
+endfunction
 
 endmodule
 
